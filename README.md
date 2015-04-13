@@ -13,11 +13,9 @@ software to compile on Mac OS X.
 cd OpenNL3.2.1/
 ./configure.sh
 make -C build/Darwin-Release/
-cd ../JMeshLib-1.2/
-make
-cd ../JMeshExt-1.0alpha_src/
-make
 cd ..
+make -C JMeshLib-1.2/
+make -C JMeshExt-1.0alpha_src/
 make
 ```
 
