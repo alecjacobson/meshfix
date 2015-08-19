@@ -8,7 +8,9 @@ software to compile on Mac OS X.
 
   1. Install SuperLU (e.g. using macports/homebrew)
 
-  2. Issue the following to compile dependencies and then meshfix.
+  2. Install makedepend (e.g. using macports/homebrew)
+
+  3. Issue the following to compile dependencies and then meshfix.
 ```bash
 cd OpenNL3.2.1/
 ./configure.sh
