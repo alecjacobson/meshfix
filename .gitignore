@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+*un~
+*/build/*
+meshfix
+libigl_example
+*.swp
+*.swo
+JMeshLib-1.2/test/test
