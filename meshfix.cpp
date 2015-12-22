@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <jrs_predicates.h>
 
-const char *input_filename;
-double epsilon_angle = 0.0;
+//#define MESHFIX_VERBOSE
 
 // Simulates the ASCII rounding error
 void asciiAlign(ExtTriMesh& tin)
@@ -62,7 +61,7 @@ Edge *getLongestEdge(Triangle *t)
 // Iterate on all the selected triangles as long as possible.
 // Keep the selection only on the degeneracies that could not be removed.
 // Return the number of degeneracies that could not be removed
-int swap_and_collapse(ExtTriMesh *tin)
+int swap_and_collapse(const double epsilon_angle, ExtTriMesh *tin)
 {
  Node *n;
  Triangle *t;
@@ -70,7 +69,15 @@ int swap_and_collapse(ExtTriMesh *tin)
  if (epsilon_angle != 0.0)
  {
   FOREACHVTTRIANGLE((&(tin->T)), t, n) UNMARK_VISIT(t);
-  JMesh::quiet = true; tin->removeDegenerateTriangles(); JMesh::quiet = false; 
+ 
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = true;
+#endif
+ tin->removeDegenerateTriangles();
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = false;
+#endif
+ 
   int failed = 0;
   FOREACHVTTRIANGLE((&(tin->T)), t, n) if (IS_VISITED(t)) failed++;
   return failed;
@@ -125,17 +132,27 @@ int swap_and_collapse(ExtTriMesh *tin)
 
 // returns true on success
 
-bool removeDegenerateTriangles(ExtTriMesh& tin, int max_iters)
+bool removeDegenerateTriangles(const double epsilon_angle, ExtTriMesh& tin, int max_iters)
 {
  int n, iter_count = 0;
 
+#ifdef MESHFIX_VERBOSE
  printf("Removing degeneracies...\n");
- while ((++iter_count) <= max_iters && swap_and_collapse(&tin))
+#endif
+ while ((++iter_count) <= max_iters && swap_and_collapse(epsilon_angle, &tin))
  {
   for (n=1; n<iter_count; n++) tin.growSelection();
   tin.removeSelectedTriangles();
   tin.removeSmallestComponents();
-  JMesh::quiet = true; tin.fillSmallBoundaries(tin.E.numels()); JMesh::quiet = false;
+ 
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = true;
+#endif
+ tin.fillSmallBoundaries(tin.E.numels());
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = false;
+#endif
+
   asciiAlign(tin);
  }
 
@@ -226,13 +243,23 @@ bool removeSelfIntersections(ExtTriMesh& tin, int max_iters)
 {
  int n, iter_count = 0;
 
+#ifdef MESHFIX_VERBOSE
  printf("Removing self-intersections...\n");
+#endif
  while ((++iter_count) <= max_iters && tin.selectIntersectingTriangles())
  {
   for (n=1; n<iter_count; n++) tin.growSelection();
   tin.removeSelectedTriangles();
   tin.removeSmallestComponents();
-  JMesh::quiet = true; tin.fillSmallBoundaries(tin.E.numels()); JMesh::quiet = false;
+ 
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = true;
+#endif
+ tin.fillSmallBoundaries(tin.E.numels());
+#ifdef MESHFIX_VERBOSE
+  JMesh::quiet = false;
+#endif
+
   asciiAlign(tin);
   selectTrianglesInCubes(tin);
  }
@@ -242,7 +269,7 @@ bool removeSelfIntersections(ExtTriMesh& tin, int max_iters)
 }
 
 
-bool isDegeneracyFree(ExtTriMesh& tin)
+bool isDegeneracyFree(const double epsilon_angle, ExtTriMesh& tin)
 {
  Node *n;
  Triangle *t;
@@ -258,7 +285,7 @@ bool isDegeneracyFree(ExtTriMesh& tin)
 
 // returns true on success
 
-bool meshclean(ExtTriMesh& tin, int max_iters = 10, int inner_loops = 3)
+bool meshclean(const double epsilon_angle, ExtTriMesh& tin, int max_iters = 10, int inner_loops = 3)
 {
  bool ni, nd;
 
@@ -267,11 +294,13 @@ bool meshclean(ExtTriMesh& tin, int max_iters = 10, int inner_loops = 3)
 
  for (int n=0; n<max_iters; n++)
  {
+#ifdef MESHFIX_VERBOSE
   printf("********* ITERATION %d *********\n",n);
-  nd=removeDegenerateTriangles(tin, inner_loops);
+#endif
+  nd=removeDegenerateTriangles(epsilon_angle,tin, inner_loops);
   tin.deselectTriangles(); tin.invertSelection();
   ni=removeSelfIntersections(tin, inner_loops);
-  if (ni && nd && isDegeneracyFree(tin)) return true;
+  if (ni && nd && isDegeneracyFree(epsilon_angle,tin)) return true;
  }
 
  return false;
@@ -405,6 +434,61 @@ char *createFilename(const char *iname, const char *subext, const char *newexten
  return oname;
 }
 
+// Inputs:
+//   epsilon_angle  used to change default of JMesh::acos_tolerance (0.0 -->
+//     use default value)
+//   keep_all_components  whether to keep all components of input
+//   tin  input messy mesh (changed in place)
+// Outputs:
+//   tin  see output
+//
+bool meshfix(
+  const double epsilon_angle, 
+  const bool keep_all_components, 
+  ExtTriMesh & tin)
+{
+#ifndef MESHFIX_VERBOSE
+  JMesh::quiet = true;
+#endif
+  if (epsilon_angle)
+  {
+    JMesh::acos_tolerance = asin((M_PI*epsilon_angle)/180.0);
+#ifdef MESHFIX_VERBOSE
+    printf("Fixing asin tolerance to %e\n",JMesh::acos_tolerance);
+#endif
+  }
+
+  if (keep_all_components)
+  {
+#ifdef MESHFIX_VERBOSE
+    printf("\nJoining input components ...\n");
+#endif
+    JMesh::begin_progress();
+    while (joinClosestComponents(&tin)) JMesh::report_progress("Num. components: %d       ",tin.shells());
+    JMesh::end_progress();
+    tin.deselectTriangles();
+  }
+
+  // Keep only the biggest component
+  int sc = tin.removeSmallestComponents();
+  if (sc) JMesh::warning("Removed %d small components\n",sc);
+
+  // Fill holes by taking into account both sampling density and normal field continuity
+  tin.fillSmallBoundaries(tin.E.numels(), true, true);
+
+  // Run geometry correction
+  if (tin.boundaries() || !meshclean(epsilon_angle,tin))
+  {
+#ifdef MESHFIX_VERBOSE
+    fprintf(stderr,"MeshFix failed!\n");
+    fprintf(stderr,"Please try manually using ReMESH v1.2 or later (http://remesh.sourceforge.net).\n");
+#endif
+    return false;
+  }
+  return true;
+}
+  
+
 int main(int argc, char *argv[])
 {
  char subext[128]="_fixed";
@@ -428,6 +512,9 @@ int main(int argc, char *argv[])
  if (argc < 2) usage();
 
  bool keep_all_components = true;
+ const char *input_filename = argv[1];
+ double epsilon_angle = 0.0;
+
  bool save_vrml = false;
  float par;
  for (int i=2; i<argc; i++)
@@ -438,11 +525,13 @@ int main(int argc, char *argv[])
    if (par < 0) JMesh::error("Epsilon angle must be > 0.\n");
    if (par > 2) JMesh::error("Epsilon angle must be < 2 degrees.\n");
    epsilon_angle = par;
-   if (epsilon_angle)
-   {
-	JMesh::acos_tolerance = asin((M_PI*epsilon_angle)/180.0);
-	printf("Fixing asin tolerance to %e\n",JMesh::acos_tolerance);
-   }
+    if (epsilon_angle)
+    {
+      JMesh::acos_tolerance = asin((M_PI*epsilon_angle)/180.0);
+#ifdef MESHFIX_VERBOSE
+      printf("Fixing asin tolerance to %e\n",JMesh::acos_tolerance);
+#endif
+    }
   }
   else if (!strcmp(argv[i], "-n")) keep_all_components = false;
   else if (!strcmp(argv[i], "-w")) save_vrml = true;
@@ -451,38 +540,18 @@ int main(int argc, char *argv[])
   if (par) i++;
  }
 
+#ifndef MESHFIX_VERBOSE
+  JMesh::quiet = true;
+#endif
  // The loader performs the conversion to a set of oriented manifolds
  if (tin.load(argv[1]) != 0) JMesh::error("Can't open file.\n");
- input_filename = argv[1];
 
- if (keep_all_components)
- {
-  printf("\nJoining input components ...\n");
-  JMesh::begin_progress();
-  while (joinClosestComponents(&tin)) JMesh::report_progress("Num. components: %d       ",tin.shells());
-  JMesh::end_progress();
-  tin.deselectTriangles();
- }
-
- // Keep only the biggest component
- int sc = tin.removeSmallestComponents();
- if (sc) JMesh::warning("Removed %d small components\n",sc);
-
- // Fill holes by taking into account both sampling density and normal field continuity
- tin.fillSmallBoundaries(tin.E.numels(), true, true);
-
- // Run geometry correction
- if (tin.boundaries() || !meshclean(tin))
- {
-  fprintf(stderr,"MeshFix failed!\n");
-  fprintf(stderr,"Please try manually using ReMESH v1.2 or later (http://remesh.sourceforge.net).\n");
-  FILE *fp = fopen("meshfix_log.txt","a");
-  fprintf(fp,"MeshFix failed on %s\n",input_filename);
-  fclose(fp);
- }
+ meshfix(epsilon_angle,keep_all_components,tin);
 
  char *fname = createFilename(argv[1], subext, (save_vrml)?(".wrl"):(".off"));
+#ifdef MESHFIX_VERBOSE
  printf("Saving output mesh to '%s'\n",fname);
+#endif
  if (save_vrml) tin.saveVRML1(fname); else tin.saveOFF(fname);
 
  return 0;
