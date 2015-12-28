@@ -29,6 +29,9 @@
 *.un~
 *.swo
 *.swp
-OpenNL3.2.1/build/*
 JMeshLib-1.2/test/test
-
+*/build/*
+meshfix
+libigl_example
+*.swp
+*.swo

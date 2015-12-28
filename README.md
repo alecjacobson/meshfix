@@ -8,9 +8,8 @@ software to compile on Mac OS X.
 
   1. Install SuperLU (e.g. using macports/homebrew)
 
-  2. Install makedepend (e.g. using macports/homebrew)
+  2. Issue the following to compile dependencies and then meshfix.
 
-  3. Issue the following to compile dependencies and then meshfix.
 ```bash
 cd OpenNL3.2.1/
 mkdir build
@@ -20,6 +19,35 @@ cd ../../
 make -C JMeshLib-1.2/
 make -C JMeshExt-1.0alpha_src/
 make
+```
+
+## Libigl/Eigen interface example
+
+The original meshfix.cpp code has been restructued a bit to provide a clean
+interface when called programmatically (not via the command line program). This
+allows us to implement a little wrapper taking a triangle mesh as a list of
+vertex positions in a matrix `V` and a list of triangle indices `F`, as is
+common in [libigl](libigl.github.io/libigl/) and  other libraries. See
+`meshfix.h` and when using, define `MESHFIX_WITH_EIGEN`.
+
+To compile an example, issue:
+
+```bash
+make libigl_example
+```
+
+And to run, issue:
+
+    ./libigl_example input-mesh.obj
+
+This should produce the cleaned mesh `output.obj` in the current directory.
+
+This example demonstrates how to use `libmeshfix.a` the compiled library
+containing the main meshfix routine (see `meshfix.h`). To compile just the
+library (and not the `libigl_example`) issue:
+
+```bash
+make libmeshfix.a
 ```
 
 > Original readme.txt
