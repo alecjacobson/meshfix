@@ -13,9 +13,10 @@ software to compile on Mac OS X.
   3. Issue the following to compile dependencies and then meshfix.
 ```bash
 cd OpenNL3.2.1/
-./configure.sh
-make -C build/Darwin-Release/
-cd ..
+mkdir build
+cd build/
+cmake ../
+cd ../../
 make -C JMeshLib-1.2/
 make -C JMeshExt-1.0alpha_src/
 make

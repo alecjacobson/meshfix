@@ -22,6 +22,7 @@ endif(COMMAND cmake_policy)
 #              Project
 ######################################
 PROJECT(OpenNL3)
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 SET(GEEX_BUILD_PATH ${PROJECT_BINARY_DIR})
 SET(BINARIES_RELATIVE_PATH /binaries/bin/)
@@ -106,17 +107,13 @@ INCLUDE_DIRECTORIES(src)
 #########################################
 # ADD HERE SUBDIRECTORIES
 #########################################
+SET(USE_SUPERLU TRUE)
+# relative to src/
+SET(SUPERLU_HOME ../SuperLU)
+SET(SUPERLU_NAME superlu)
+ADD_SUBDIRECTORY(SuperLU)
 ADD_SUBDIRECTORY(src)
 
 #IF(BUILD_EXAMPLES)
 #    ADD_SUBDIRECTORY(examples)
 #ENDIF(BUILD_EXAMPLES)
-
-
-IF(WIN32)
-  MESSAGE("Configure done. You may need to click on configure again if the OK button is disabled")
-ENDIF(WIN32)
-
-
-
-
