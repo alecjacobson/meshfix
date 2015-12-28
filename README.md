@@ -19,6 +19,21 @@ cmake -DCMAKE_BUILD_TYPE=Release  ..
 make
 ```
 
+### Dependencies
+
+All dependencies are included, either explicitly or as [git
+submodules](https://git-scm.com/docs/git-submodule). If you clone this repo
+using `git clone --recursive` then the dependency layout should be:
+
+    meshfix/
+      JMeshExt-1.0alpha_src/
+        JMeshLib-1.2/
+        OpenNL3.2.1/
+          SuperLU/
+
+The [`libigl_example`](#libigleigen-interface-example) also depends on
+[libigl](libigl.github.io/libigl/) (not included).
+
 ## Libigl/Eigen interface example
 
 The original meshfix.cpp code has been restructued a bit to provide a clean
