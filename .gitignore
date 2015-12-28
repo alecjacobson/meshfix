@@ -32,6 +32,7 @@
 JMeshLib-1.2/test/test
 JMeshExt-1.0alpha_src/JMeshLib-1.2/test/test
 */build/*
+build/*
 */*/build/*
 */*/*/build/*
 meshfix
