@@ -7,6 +7,14 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
 
 add_definitions(-DIS64BITPLATFORM)
 
+# We need C++11. Put this directive after CGAL's include.
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -Wall -Wno-reorder -Wno-unknown-pragmas -Wno-deprecated-declarations")
+endif()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
 
 set(JMESHEXT_DIR "${PROJECT_SOURCE_DIR}/JMeshExt-1.0alpha_src")
 set(JMESH_DIR "${JMESHEXT_DIR}/JMeshLib-1.2/")
@@ -20,8 +28,10 @@ if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 endif()
 
+
 add_library(meshfix STATIC meshfix.cpp)
 add_executable(meshfix-bin main.cpp)
+
 target_link_libraries(
   meshfix-bin 
   ${BLAS_LIBRARIES} 
@@ -32,3 +42,17 @@ target_link_libraries(
   superlu)
 set_target_properties(meshfix-bin PROPERTIES OUTPUT_NAME meshfix)
 
+find_package(LIBIGL QUIET)
+
+if(LIBIGL_FOUND)
+  include_directories(${LIBIGL_INCLUDE_DIR})
+  add_executable(libigl_example libigl_example.cpp)
+  target_link_libraries(
+    libigl_example
+    ${BLAS_LIBRARIES} 
+    meshfix 
+    jmesh 
+    jmeshext 
+    nl 
+    superlu)
+endif()

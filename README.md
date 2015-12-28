@@ -4,20 +4,18 @@ This is a [port](http://www.alecjacobson.com/weblog/?p=2887) of Marco Attene's
 wonderful, award-winning [MeshFix](http://sourceforge.net/projects/meshfix/)
 software to compile on Mac OS X.
 
+> Get started with:
+>
+```bash
+git clone --recursive https://github.com/alecjacobson/meshfix
+```
+
 ## Compilation
 
-  1. Install SuperLU (e.g. using macports/homebrew)
-
-  2. Issue the following to compile dependencies and then meshfix.
-
 ```bash
-cd OpenNL3.2.1/
 mkdir build
-cd build/
-cmake ../
-cd ../../
-make -C JMeshLib-1.2/
-make -C JMeshExt-1.0alpha_src/
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release  ..
 make
 ```
 
@@ -30,27 +28,16 @@ vertex positions in a matrix `V` and a list of triangle indices `F`, as is
 common in [libigl](libigl.github.io/libigl/) and  other libraries. See
 `meshfix.h` and when using, define `MESHFIX_WITH_EIGEN`.
 
-To compile an example, issue:
-
-```bash
-make libigl_example
-```
-
-And to run, issue:
+If cmake finds libigl installed then it will also build the example
+`libigl_example`. To run, issue:
 
     ./libigl_example input-mesh.obj
 
 This should produce the cleaned mesh `output.obj` in the current directory.
 
-This example demonstrates how to use `libmeshfix.a` the compiled library
-containing the main meshfix routine (see `meshfix.h`). To compile just the
-library (and not the `libigl_example`) issue:
+This example demonstrates how to use `libmeshfix.a`, the compiled library
+containing the main meshfix routine (see `meshfix.h`).
 
-```bash
-make libmeshfix.a
-```
-
-> Original readme.txt
 
 ## MeshFix V1.0
 by Marco Attene
