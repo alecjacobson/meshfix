@@ -1,3 +1,0 @@
-[submodule "OpenNL3.2.1/SuperLU"]
-	path = OpenNL3.2.1/SuperLU
-	url = https://github.com/starseeker/SuperLU
