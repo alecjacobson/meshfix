@@ -18,10 +18,13 @@ endif()
 
 set(JMESHEXT_DIR "${PROJECT_SOURCE_DIR}/JMeshExt-1.0alpha_src")
 set(JMESH_DIR "${JMESHEXT_DIR}/JMeshLib-1.2/")
+set(OPENNL_DIR "${JMESH_DIR}/OpenNL3.2.1/")
+set(SUPERLU_DIR "${OPENNL_DIR}/SuperLU/")
 
 include_directories("${JMESHEXT_DIR}/include")
 include_directories("${JMESH_DIR}/include")
 add_subdirectory("${JMESHEXT_DIR}")
+include_directories("${SUPERLU_DIR}/src") 
 find_library(BLAS REQUIRED)
 if(APPLE)
   set(CMAKE_CXX_LINK_FLAGS "-framework Accelerate")
@@ -45,6 +48,7 @@ set_target_properties(meshfix-bin PROPERTIES OUTPUT_NAME meshfix)
 find_package(LIBIGL QUIET)
 
 if(LIBIGL_FOUND)
+  find_package(EIGEN3 REQUIRED)
   include_directories(${LIBIGL_INCLUDE_DIR})
   add_executable(libigl_example libigl_example.cpp)
   target_link_libraries(
@@ -55,4 +59,6 @@ if(LIBIGL_FOUND)
     jmeshext 
     nl 
     superlu)
+else()
+  message(STATUS "NOT building libigl example")
 endif()
