@@ -24,7 +24,9 @@ set(SUPERLU_DIR "${OPENNL_DIR}/SuperLU/")
 include_directories("${JMESHEXT_DIR}/include")
 include_directories("${JMESH_DIR}/include")
 add_subdirectory("${JMESHEXT_DIR}")
-find_library(BLAS REQUIRED)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+add_definitions(-DUSE_FORTRAN_BLAS)
 if(APPLE)
   set(CMAKE_CXX_LINK_FLAGS "-framework Accelerate")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
@@ -36,12 +38,14 @@ add_executable(meshfix-bin main.cpp)
 
 target_link_libraries(
   meshfix-bin 
-  ${BLAS_LIBRARIES} 
   meshfix 
   jmesh 
   jmeshext 
   nl 
-  superlu)
+  superlu
+  ${BLAS_LIBRARIES} 
+  ${LAPACK_LIBRARIES}
+)
 set_target_properties(meshfix-bin PROPERTIES OUTPUT_NAME meshfix)
 
 find_package(LIBIGL QUIET)
@@ -53,12 +57,14 @@ if(LIBIGL_FOUND)
   add_executable(libigl_example libigl_example.cpp)
   target_link_libraries(
     libigl_example
-    ${BLAS_LIBRARIES} 
     meshfix 
     jmesh 
     jmeshext 
     nl 
-    superlu)
+    superlu
+    ${BLAS_LIBRARIES} 
+    ${LAPACK_LIBRARIES}    
+)
 else()
   message(STATUS "NOT building libigl example")
 endif()
