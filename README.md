@@ -46,9 +46,9 @@ common in [libigl](libigl.github.io/libigl/) and  other libraries. See
 If cmake finds libigl installed then it will also build the example
 `libigl_example`. To run, issue:
 
-    ./libigl_example input-mesh.obj
+    ./libigl_example input-mesh.obj output-mesh.ply
 
-This should produce the cleaned mesh `output.obj` in the current directory.
+This should produce the cleaned mesh `output-mesh.ply`.
 
 This example demonstrates how to use `libmeshfix.a`, the compiled library
 containing the main meshfix routine (see `meshfix.h`).
