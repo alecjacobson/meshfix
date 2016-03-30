@@ -47,6 +47,12 @@ inline bool meshfix(
 {
   ExtTriMesh tin;
   mesh_to_ext_tri_mesh(V,F,tin);
+  // These **must** be called after loading, before calling `meshfix`
+  tin.removeVertices();
+  tin.cutAndStitch();
+  tin.forceNormalConsistence();
+  tin.duplicateNonManifoldVertices();
+  tin.removeDuplicatedTriangles();
   if(!meshfix(0,false,tin))
   {
     return false;
