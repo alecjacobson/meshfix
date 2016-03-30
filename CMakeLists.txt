@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 project(meshfix)
 
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+option(MESHFIX_VERBOSE "Turn on verbose messages" OFF)
+if(MESHFIX_VERBOSE)
+  add_definitions(-DMESHFIX_VERBOSE)
+endif()
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
 
