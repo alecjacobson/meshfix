@@ -52,22 +52,28 @@ target_link_libraries(
 )
 set_target_properties(meshfix-bin PROPERTIES OUTPUT_NAME meshfix)
 
-find_package(LIBIGL QUIET)
-if(LIBIGL_FOUND)
-  option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" OFF)
-  add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
-  include_directories(${LIBIGL_INCLUDE_DIRS})
-  add_executable(libigl_example libigl_example.cpp)
-  target_link_libraries(
-    libigl_example
-    meshfix 
-    jmesh 
-    jmeshext 
-    nl 
-    superlu
-    ${BLAS_LIBRARIES} 
-    ${LAPACK_LIBRARIES}    
-)
+option(MESHFIX_WITH_LIBIGL "Use libigl" ON)
+
+if(MESHFIX_WITH_LIBIGL)
+  find_package(LIBIGL QUIET)
+  if(LIBIGL_FOUND)
+    option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" OFF)
+    add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
+    include_directories(${LIBIGL_INCLUDE_DIRS})
+    add_executable(libigl_example libigl_example.cpp)
+    target_link_libraries(
+      libigl_example
+      meshfix 
+      jmesh 
+      jmeshext 
+      nl 
+      superlu
+      ${BLAS_LIBRARIES} 
+      ${LAPACK_LIBRARIES}    
+  )
+  else()
+    message(STATUS "NOT building libigl example (LIBIGL not found)")
+  endif()
 else()
-  message(STATUS "NOT building libigl example")
+  message(STATUS "NOT attempting libigl example")
 endif()
