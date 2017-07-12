@@ -53,11 +53,10 @@ target_link_libraries(
 set_target_properties(meshfix-bin PROPERTIES OUTPUT_NAME meshfix)
 
 find_package(LIBIGL QUIET)
-
 if(LIBIGL_FOUND)
-  find_package(EIGEN3 REQUIRED)
-  include_directories(${LIBIGL_INCLUDE_DIR})
-  include_directories(${EIGEN3_INCLUDE_DIR})
+  option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" OFF)
+  add_subdirectory("${LIBIGL_INCLUDE_DIR}/../shared/cmake" "libigl")
+  include_directories(${LIBIGL_INCLUDE_DIRS})
   add_executable(libigl_example libigl_example.cpp)
   target_link_libraries(
     libigl_example
